@@ -5,61 +5,72 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Spare Parts Data</title>
 <style>
-/* ===== Mixed UI: clean new look + restored old controls ===== */
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #f5f6fa;
-  transition: background 0.25s ease, color 0.25s ease;
-  color: #222;
+/* ===== Mixed UI: clean new look + restored features ===== */
+:root{
+  --bg:#f5f6fa; --card:#fff; --muted:#7d8794; --primary:#007bff; --text:#222;
+  --dark-bg:#2c3e50; --dark-card:#34495e; --dark-text:#ecf0f1;
 }
-body.dark { background:#2c3e50; color:#ecf0f1; }
-h2 { margin:0 0 10px 0; font-size:32px; color:#333; }
-body.dark h2{ color:#ecf0f1; }
-
-#status { color:#7d8794; margin-bottom:10px; font-style:italic; }
+body{
+  font-family: Arial, sans-serif;
+  margin:20px;
+  background:var(--bg);
+  color:var(--text);
+  transition: background .2s,color .2s;
+}
+body.dark{ background:var(--dark-bg); color:var(--dark-text); }
+h2{ margin:0 0 10px 0; font-size:32px; color:inherit; }
+#status{ color:var(--muted); margin-bottom:10px; font-style:italic; }
 
 /* Top bar & buttons */
-.topbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-.btn { padding:8px 12px; border-radius:6px; border: none; cursor:pointer; }
-.btn-primary { background:#007bff; color:white; box-shadow: 0 2px 0 rgba(0,0,0,0.05); }
-.btn-secondary { background:#eee; color:#222; border-radius:6px; }
+.topbar{ display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+.btn{ padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
+.btn-primary{ background:var(--primary); color:#fff; box-shadow:0 2px 0 rgba(0,0,0,0.05); }
+.btn-secondary{ background:#eee; color:#222; border-radius:6px; }
 
-/* toggles kept like old repo */
-.toggles { display:flex; gap:12px; align-items:center; margin-left:6px; }
-.toggle { position:relative; width:50px; height:26px; display:inline-block; }
-.toggle input { opacity:0; width:0; height:0; }
-.slider { position:absolute; inset:0; background:#ccc; border-radius:26px; transition:0.2s; }
-.slider:before { content:""; position:absolute; left:3px; bottom:3px; width:20px; height:20px; background:white; border-radius:50%; transition:0.2s; }
-.toggle input:checked + .slider { background:#007bff; }
-.toggle input:checked + .slider:before { transform:translateX(24px); }
+/* toggles */
+.toggles{ display:flex; gap:12px; align-items:center; margin-left:6px; }
+.toggle{ position:relative; width:50px; height:26px; display:inline-block; }
+.toggle input{ opacity:0; width:0; height:0; }
+.slider{ position:absolute; inset:0; background:#ccc; border-radius:26px; transition:0.2s; }
+.slider:before{ content:""; position:absolute; left:3px; bottom:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:0.2s; }
+.toggle input:checked + .slider{ background:var(--primary); }
+.toggle input:checked + .slider:before{ transform:translateX(24px); }
 
-/* Search */
-#search { padding:12px; width:420px; max-width:100%; border-radius:8px; border:1px solid #ccc; margin:10px 0; }
+/* Search box */
+#search{ padding:12px; width:420px; max-width:100%; border-radius:8px; border:1px solid #ccc; margin:10px 0; }
 
 /* Table */
-table { width:100%; border-collapse:collapse; background:white; border-radius:8px; overflow:hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.06); }
-th { background:#e6e9f0; padding:10px; text-align:left; border-bottom:1px solid #dcdde1; }
-td { padding:10px; border-bottom:1px solid #efefef; }
-.compact td, .compact th { padding:6px; font-size:13px; }
+table{ width:100%; border-collapse:collapse; background:var(--card); border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+th{ background:#e6e9f0; padding:10px; text-align:left; border-bottom:1px solid #dcdde1; }
+td{ padding:10px; border-bottom:1px solid #efefef; }
+.compact td,.compact th{ padding:6px; font-size:13px; }
+body.dark table{ background:var(--dark-card); }
+body.dark th{ background:var(--dark-bg); color:var(--dark-text); border-bottom-color:#555; }
+body.dark td{ border-bottom-color:#3a4a59; }
 
 /* Pagination */
-.pagination { margin-top:16px; display:flex; align-items:center; gap:8px; }
+.pagination{ margin-top:16px; display:flex; align-items:center; gap:8px; }
 
-/* Scanner modal styles */
-.modal-backdrop { position:fixed; inset:0; background: rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:9999; }
-.modal { width:820px; max-width:96%; background:#fff; border-radius:10px; padding:16px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
-#qr-reader { width:100%; height:360px; background:#000; display:flex; align-items:center; justify-content:center; color:#999; }
+/* Scanner modal (SMALL centered modal) */
+.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:9999; }
+.modal{ width:640px; max-width:94%; background:var(--card); border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.3); max-height:86vh; overflow:hidden; display:flex; flex-direction:column; }
+.modal-header{ font-size:18px; color:#666; margin:0 0 8px; }
+#qr-reader{ width:100%; height:360px; background:#000; display:flex; align-items:center; justify-content:center; color:#999; overflow:hidden; border-radius:8px; position:relative; }
+.scan-tools{ display:flex; justify-content:space-between; gap:10px; margin-top:10px; align-items:center; }
+.scan-btn{ padding:10px 14px; border-radius:6px; border:1px solid var(--primary); background:#fff; color:var(--primary); cursor:pointer; }
+.modal-footer{ text-align:right; margin-top:10px; }
 
-/* scan tools row */
-.scan-tools { display:flex; justify-content:space-between; gap:10px; margin-top:12px; align-items:center; }
-.scan-btn { padding:10px 14px; border-radius:6px; border:1px solid #007bff; background:#fff; color:#007bff; cursor:pointer; }
+/* ensure close always visible and modal content scrollable if needed */
+.modal-body{ overflow:auto; flex:1; }
 
-/* small screens */
-@media (max-width:768px){
-  #search{width:100%;}
-  #qr-reader{height:260px;}
-  .modal{padding:12px;}
+/* dark variant for modal */
+body.dark .modal{ background:var(--dark-card); color:var(--dark-text); }
+
+/* responsive */
+@media (max-width:600px){
+  .modal{ width:94%; padding:10px; }
+  #qr-reader{ height:260px; }
+  #search{ width:100%; }
 }
 </style>
 </head>
@@ -106,21 +117,23 @@ td { padding:10px; border-bottom:1px solid #efefef; }
 
 <input id="jumpPage" type="number" placeholder="Go to page"><button onclick="jumpToPage()" class="btn btn-secondary">Go</button>
 
-<!-- Scanner modal -->
+<!-- SMALL SCANNER MODAL -->
 <div id="qr-backdrop" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Scanner modal">
-    <h3 style="margin-top:0;color:#666;">Scanner (QR + Barcode)</h3>
-    <div id="qr-reader">Camera preview will appear here</div>
+    <div class="modal-body">
+      <h3 class="modal-header">Scanner (QR + Barcode)</h3>
+      <div id="qr-reader">Camera preview will appear here</div>
 
-    <div class="scan-tools">
-      <div style="display:flex;gap:8px;">
-        <button id="btn-flash" class="scan-btn">🔦 Flash</button>
-        <button id="btn-photo" class="scan-btn">🖼️ Scan From Photo</button>
+      <div class="scan-tools">
+        <div style="display:flex;gap:8px;">
+          <button id="btn-flash" class="scan-btn">🔦 Flash</button>
+          <button id="btn-photo" class="scan-btn">🖼️ Scan From Photo</button>
+        </div>
+        <div style="font-size:13px;color:#666;">Tip: center code inside the preview</div>
       </div>
-      <div style="font-size:13px;color:#666;">Tip: center code inside the preview</div>
     </div>
 
-    <div style="text-align:right;margin-top:12px;">
+    <div class="modal-footer">
       <button id="qr-close" class="btn btn-secondary">Close</button>
     </div>
   </div>
@@ -218,11 +231,10 @@ document.getElementById('btn-refresh').addEventListener('click', loadData);
 let html5QrcodeLoaded = false;
 let qrScanner = null;
 let scanLock = false;
-let currentVideoTrack = null;
 let torchOn = false;
 
-// small beep (tiny base64 mp3) - short blip
-const beep = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3Ljg0LjEwMAAAAAAA//uQxAADBjQACgAAAAEAAwBCAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==");
+// tiny beep (short sound)
+const beep = new Audio("data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU3Ljg0LjEwMAAAAAAA==");
 
 function injectScriptText(code){
   return new Promise((resolve,reject)=>{
@@ -260,7 +272,7 @@ function tryFetchRawGithub(){
         rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/html5-qrcode.min.js`;
       }
       fetch(rawUrl).then(r=>{
-        if(!r.ok) throw new Error("raw fetch ok? "+r.status);
+        if(!r.ok) throw new Error("raw fetch error "+r.status);
         return r.text();
       }).then(txt=>{
         if(!txt || txt.length < 200) throw new Error("raw file too small");
@@ -275,22 +287,19 @@ async function loadHtml5QrcodeScript(){
   try{
     await tryLoadLocal();
     return;
-  }catch(e){
-    // try raw
-  }
+  }catch(e){}
   try{
     await tryFetchRawGithub();
     return;
-  }catch(e){
-    // final fallback to CDN (may be blocked on GitHub Pages)
-    return new Promise((resolve,reject)=>{
-      const s=document.createElement('script');
-      s.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js";
-      s.onload = ()=>{ html5QrcodeLoaded=true; resolve(); };
-      s.onerror = ()=>reject(new Error("All attempts to load html5-qrcode failed."));
-      document.head.appendChild(s);
-    });
-  }
+  }catch(e){}
+  // final fallback to CDN (may be blocked)
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement('script');
+    s.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js";
+    s.onload = ()=>{ html5QrcodeLoaded=true; resolve(); };
+    s.onerror = ()=>reject(new Error("All attempts to load html5-qrcode failed."));
+    document.head.appendChild(s);
+  });
 }
 
 const qrBackdrop = document.getElementById('qr-backdrop');
@@ -303,41 +312,36 @@ const btnPhoto = document.getElementById('btn-photo');
 btnScan.addEventListener('click', openQR);
 btnClose.addEventListener('click', closeQR);
 
-/* Safe clear of existing scanner */
 function safeClearScanner(){
   if(qrScanner){
     try{
       qrScanner.stop().then(()=>{ try{ qrScanner.clear(); }catch(e){} }).catch(()=>{});
     }catch(e){}
     qrScanner = null;
-    currentVideoTrack = null;
-    torchOn = false;
   }
+  torchOn = false;
 }
 
-/* Utility: obtain the internal video element created by Html5Qrcode */
 function getScannerVideoElement(){
   if(!qrReader) return null;
-  // html5-qrcode places a video element under the container; attempt to find it.
-  const vid = qrReader.querySelector('video');
-  return vid || null;
+  // html5-qrcode places a video element inside the container
+  return qrReader.querySelector('video') || null;
 }
 
-/* Try to set torch using the current video track capabilities (best-effort) */
 async function setTorch(on){
   try{
     const video = getScannerVideoElement();
-    if(!video || !video.srcObject) throw new Error("No video stream");
+    if(!video || !video.srcObject) throw new Error("No video");
     const track = video.srcObject.getVideoTracks()[0];
-    if(!track) throw new Error("No video track");
+    if(!track) throw new Error("No track");
     const cap = track.getCapabilities ? track.getCapabilities() : {};
-    if(cap.torch || (cap && cap.torch === true)){
-      await track.applyConstraints({ advanced: [{ torch: on }] });
+    if(cap.torch){
+      await track.applyConstraints({ advanced:[{ torch: on }] });
       torchOn = on;
       return true;
-    } else {
-      // Some Samsung browsers use 'imageSmoothing' constraints - fallback attempt
-      await track.applyConstraints({ advanced: [{ torch: on }] }).catch(()=>{});
+    }else{
+      // best-effort attempt (may fail)
+      await track.applyConstraints({ advanced:[{ torch: on }] }).catch(()=>{});
       return false;
     }
   }catch(e){
@@ -345,32 +349,31 @@ async function setTorch(on){
   }
 }
 
-/* Actual open scanner */
+/* OPEN scanner - small modal */
 async function openQR(){
   qrBackdrop.style.display = 'flex';
   qrBackdrop.setAttribute('aria-hidden','false');
   scanLock = false;
   safeClearScanner();
-  qrReader.innerHTML = ""; // clear previous content
+  qrReader.innerHTML = ""; // clear
 
-  // Slight delay to ensure modal is visible and sized
+  // ensure modal visible/rendered
   await new Promise(r => requestAnimationFrame(()=>setTimeout(r, 200)));
 
   try{
     await loadHtml5QrcodeScript();
   }catch(e){
-    alert("Scanner library failed to load: " + (e && e.message ? e.message : e));
+    alert("Scanner library failed to load: "+(e && e.message? e.message : e));
     qrBackdrop.style.display = 'none';
     return;
   }
 
   try{
-    // create instance
     qrScanner = new Html5Qrcode("qr-reader");
 
     const config = {
       fps: 15,
-      qrbox: null, // full width
+      qrbox: null, // full width of container
       experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       formatsToSupport: [
         Html5QrcodeSupportedFormats.QR_CODE,
@@ -381,9 +384,7 @@ async function openQR(){
       ]
     };
 
-    // IMPORTANT: html5-qrcode requires the first arg to be either a string deviceId OR an object with a single key.
-    // We pass facingMode only (one key).
-    const cameraConfig = { facingMode: "environment" };
+    const cameraConfig = { facingMode: "environment" }; // only one key
 
     await qrScanner.start(
       cameraConfig,
@@ -393,26 +394,20 @@ async function openQR(){
         scanLock = true;
         try{ beep.play().catch(()=>{}); }catch(e){}
         document.getElementById('search').value = decodedText;
-        currentPage = 1;
-        render();
-        // auto-close after slight delay so user sees the scanned value
-        setTimeout(()=>{ closeQR(); }, 220);
+        currentPage = 1; render();
+        // give a short moment then close so user sees the value
+        setTimeout(()=>{ closeQR(); }, 250);
       },
       (error) => {
-        // ignore frequent decode errors
+        // ignore frame decode errors
       }
     );
 
-    // after start, try detect video element and keep a reference to track
-    setTimeout(()=>{
-      const v = getScannerVideoElement();
-      if(v && v.srcObject && v.srcObject.getVideoTracks){
-        currentVideoTrack = v.srcObject.getVideoTracks()[0];
-      }
-    }, 600);
+    // small delay to detect video element
+    setTimeout(()=>{},500);
 
   }catch(err){
-    console.error("Failed to start scanner:", err);
+    console.error("start error", err);
     alert("Camera failed to start: " + (err && err.message ? err.message : err));
     qrBackdrop.style.display = 'none';
     qrBackdrop.setAttribute('aria-hidden','true');
@@ -420,144 +415,145 @@ async function openQR(){
   }
 }
 
-/* Close scanner and free camera */
+/* CLOSE scanner */
 function closeQR(){
   qrBackdrop.style.display = 'none';
   qrBackdrop.setAttribute('aria-hidden','true');
   safeClearScanner();
 }
 
-/* Flashlight toggle button */
+/* Flashlight toggle */
 btnFlash.addEventListener('click', async ()=>{
   if(!qrScanner){
     alert("Open scanner first");
     return;
   }
-  // Try to toggle
-  const success = await setTorch(!torchOn);
-  if(!success){
-    alert("Flash/torch not supported on this device/browser.");
-  }
+  const ok = await setTorch(!torchOn);
+  if(!ok) alert("Flash/torch not supported on this device/browser.");
 });
 
-/* ================= Scan From Photo (FIX) =================
+/* ============ Scan From Photo (Option B) =============
    Strategy:
-   1) Try html5-qrcode.scanFile(file, tryFlip=true) which decodes QR codes (fast)
-   2) If that fails, attempt browser BarcodeDetector (supports EAN-13) on an ImageBitmap
-   3) If BarcodeDetector not available or fails, show "not found"
-   This supports Option B: QR + EAN-13
+   1) try qrScanner.scanFile(file, tryFlip=true) => good for QR
+   2) fallback: use BarcodeDetector (EAN-13) if available
+   3) final fallback: draw to canvas + try html5-qrcode scan attempts
 */
 btnPhoto.addEventListener('click', ()=> {
-  // create a file input on the fly
+  // create hidden file input and read file via FileReader to prevent native preview
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'image/*';
-  input.onchange = async (e) => {
+  input.style.display = 'none';
+  input.onchange = async (e)=>{
     const file = e.target.files && e.target.files[0];
     if(!file) return;
-    try{
-      // Ensure library loaded
-      await loadHtml5QrcodeScript();
-    }catch(e){
-      alert("Scanner library not loaded: "+(e&&e.message?e.message:e));
-      return;
-    }
 
-    // 1) try html5-qrcode's scanFile -> good for QR
-    try{
-      // If scanner instance exists, prefer using that instance's static scanFile feature
-      // html5-qrcode provides a static-like function via created instance.
-      let scanResult = null;
-      if(qrScanner && typeof qrScanner.scanFile === 'function'){
-        scanResult = await qrScanner.scanFile(file, true);
-      } else if(typeof Html5Qrcode === 'function' && Html5Qrcode.getCameras){
-        // if no instance, create a temp Html5Qrcode instance for scanning the file
-        const tmp = new Html5Qrcode();
-        if(typeof tmp.scanFile === 'function') scanResult = await tmp.scanFile(file, true);
+    // Read the file into memory first - prevents some browsers' default preview behaviour
+    const reader = new FileReader();
+    reader.onload = async () => {
+      // create blob from result
+      try{
+        await handleImageFile(file);
+      }catch(err){
+        alert("No QR or supported barcode found in image.");
       }
-      if(scanResult){
-        // success
-        try{ beep.play().catch(()=>{}); }catch(e){}
-        document.getElementById('search').value = scanResult;
-        currentPage = 1;
-        render();
-        return;
-      }
-    }catch(err){
-      // console.log("scanFile failed or no result:", err);
-    }
-
-    // 2) Try BarcodeDetector for EAN-13 (if supported)
-    try{
-      if('BarcodeDetector' in window){
-        // request formats: EAN_13 (and EAN_8 & UPC_A to be safe)
-        const supportedFormats = ['ean_13','ean_8','upc_a'];
-        let detector;
-        try{
-          detector = new BarcodeDetector({formats: supportedFormats});
-        }catch(e){
-          // Some browsers throw if formats not supported; try default
-          detector = new BarcodeDetector();
-        }
-        // Create ImageBitmap from file
-        const bitmap = await createImageBitmap(file);
-        const results = await detector.detect(bitmap);
-        if(results && results.length>0){
-          // take first result
-          const val = results[0].rawValue || results[0].rawData || results[0].displayValue || results[0].rawText;
-          if(val){
-            try{ beep.play().catch(()=>{}); }catch(e){}
-            document.getElementById('search').value = val;
-            currentPage = 1;
-            render();
-            return;
-          }
-        }
-      }
-    }catch(e){
-      // BarcodeDetector might not exist or fail - ignore and continue
-      // console.warn('BarcodeDetector failed', e);
-    }
-
-    // 3) As last attempt we can try to draw image to canvas and use Html5Qrcode's decode from image element
-    try{
-      // create an img element
-      const img = document.createElement('img');
-      img.style.display = 'none';
-      document.body.appendChild(img);
-      img.src = URL.createObjectURL(file);
-      await new Promise((resolve,reject)=>{
-        img.onload = ()=>resolve();
-        img.onerror = ()=>reject(new Error("image load failed"));
-      });
-
-      if(typeof Html5Qrcode === 'function'){
-        const tmp = new Html5Qrcode();
-        try{
-          const result = await tmp.scanFile(file, true); // attempt again (some builds differ)
-          if(result){
-            try{ beep.play().catch(()=>{}); }catch(e){}
-            document.getElementById('search').value = result;
-            currentPage = 1;
-            render();
-            img.remove();
-            return;
-          }
-        }catch(e){}
-      }
-      // cleanup
-      img.remove();
-    }catch(e){
-      // ignore
-    }
-
-    // final: not found
-    alert("No QR code or supported barcode found in the selected image.");
+    };
+    reader.onerror = ()=>{ alert("Failed to read file."); };
+    reader.readAsArrayBuffer(file);
   };
+  document.body.appendChild(input);
   input.click();
+  // cleanup input after selection
+  input.addEventListener('blur', ()=>input.remove());
 });
 
-/* ensure camera is freed on page hide/unload */
+async function handleImageFile(file){
+  // ensure library loaded (for scanFile)
+  try{ await loadHtml5QrcodeScript(); }catch(e){ throw new Error("library"); }
+
+  // 1) try built-in scanFile (good for QR)
+  try{
+    // prefer instance method if available
+    if(qrScanner && typeof qrScanner.scanFile === 'function'){
+      const qrResult = await qrScanner.scanFile(file, true);
+      if(qrResult){
+        try{ beep.play().catch(()=>{}); }catch(e){}
+        document.getElementById('search').value = qrResult;
+        currentPage = 1; render();
+        return;
+      }
+    } else if(typeof Html5Qrcode === 'function'){
+      // create temp instance
+      const tmp = new Html5Qrcode(); // no container - used only for scanFile
+      if(typeof tmp.scanFile === 'function'){
+        const res = await tmp.scanFile(file, true);
+        if(res){
+          try{ beep.play().catch(()=>{}); }catch(e){}
+          document.getElementById('search').value = res;
+          currentPage = 1; render();
+          try{ tmp.clear(); }catch(e){}; 
+          return;
+        }
+        try{ tmp.clear(); }catch(e){};
+      }
+    }
+  }catch(e){
+    // continue to fallback
+  }
+
+  // 2) Try BarcodeDetector (EAN-13) on ImageBitmap (fast when supported)
+  try{
+    if('BarcodeDetector' in window){
+      const formats = ['ean_13','ean_8','upc_a']; // option B
+      let detector;
+      try{ detector = new BarcodeDetector({formats}); }catch(e){ detector = new BarcodeDetector(); }
+      const imgBitmap = await createImageBitmap(file);
+      const results = await detector.detect(imgBitmap);
+      if(results && results.length>0){
+        const val = results[0].rawValue || results[0].rawData || results[0].displayValue || results[0].rawText;
+        if(val){
+          try{ beep.play().catch(()=>{}); }catch(e){}
+          document.getElementById('search').value = val;
+          currentPage = 1; render();
+          return;
+        }
+      }
+    }
+  }catch(e){
+    // ignore and continue
+  }
+
+  // 3) Last attempt: draw to canvas & use Html5Qrcode's decodeFromImage or scanFile again
+  try{
+    const img = document.createElement('img');
+    img.src = URL.createObjectURL(file);
+    await new Promise((res,rej)=>{ img.onload = res; img.onerror = rej; });
+    // attempt decode using tmp instance
+    if(typeof Html5Qrcode === 'function'){
+      const tmp = new Html5Qrcode();
+      try{
+        const res = await tmp.scanFile(file, true); // attempt again
+        if(res){
+          try{ beep.play().catch(()=>{}); }catch(e){}
+          document.getElementById('search').value = res;
+          currentPage = 1; render();
+          try{ tmp.clear(); }catch(e){}
+          img.remove();
+          return;
+        }
+      }catch(e){}
+      try{ tmp.clear(); }catch(e){};
+    }
+    img.remove();
+  }catch(e){
+    // nothing more
+  }
+
+  // final: not found
+  throw new Error("not-found");
+}
+
+/* free camera when page unloaded */
 window.addEventListener('pagehide', ()=>{ safeClearScanner(); });
 window.addEventListener('beforeunload', ()=>{ safeClearScanner(); });
 
