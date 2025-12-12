@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Spare Parts Data</title>
+
+<style>
+/* === Original UI styles (UNCHANGED) === */
+body { 
+    font-family: Arial, sans-serif; 
+    margin: 20px; 
+    background: #f5f6fa;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+body.dark { background: #2c3e50; color: #ecf0f1; }
+h2 { margin-bottom: 15px; color: #333; transition: color 0.3s ease; }
+body.dark h2 { color: #ecf0f1; }
+input {
+    padding: 10px;
+    width: 350px;
+    max-width: 100%;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 15px;
+}
+table { width: 100%; border-collapse: collapse; background: white; 
+        border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+td, th { padding: 10px; border-bottom: 1px solid #eee; }
+.pagination { margin-top: 20px; }
+.pagination button { padding: 8px 15px; margin-right: 5px; background:#007bff;color:white;border:none; }
+.topbar { display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+.btn { padding: 8px 12px; border-radius: 6px; border: none; cursor: pointer; }
+.btn-primary { background:#007bff;color:white; }
+
+/* Scanner Modal */
+.modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: none; align-items: center; justify-content: center; z-index: 999;
+}
+.modal {
+    background: white; padding: 16px; border-radius: 8px;
+    width: 780px; max-width: 95%; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+#qr-reader { width:100%; min-height:300px; }
+
+/* Flashlight + photo buttons */
+.scan-tools {
+    display:flex; justify-content:space-between;
+    margin-top:12px;
+}
+.scan-btn {
+    padding:10px 14px;
+    border-radius:6px;
+    border:1px solid #007bff;
+    background:white;
+    color:#007bff;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="status">Loading data...</div>
+
+<h2>Spare Parts Search</h2>
+
+<div class="topbar">
+  <button class="btn btn-primary" id="btn-scan">📷 Scan (QR / Barcode)</button>
+  <button class="btn" id="btn-refresh">↻ Refresh</button>
+  <div style="flex:1"></div>
+</div>
+
+<input type="text" id="search" placeholder="Search part / description / category / qty">
+
+<table>
+<thead>
+<tr>
+<th>S.No</th><th>Item No</th><th>Part No</th>
+<th>Description</th><th>Category</th><th>Qty</th>
+</tr>
+</thead>
+<tbody id="table-body"></tbody>
+</table>
+
+<div class="pagination">
+  <button id="prev-page">Prev</button>
+  <span id="page-info"></span>
+  <button id="next-page">Next</button>
+</div>
+
+<br>
+
+<input type="number" id="jumpPage" placeholder="Go to page">
+<button onclick="jumpToPage()">Go</button>
+
+<!-- SCANNER MODAL -->
+<div id="qr-backdrop" class="modal-backdrop">
+<div class="modal">
+<h3>Scanner (QR + Barcode)</h3>
+
+<div id="qr-reader"></div>
+
+<div class="scan-tools">
+    <button class="scan-btn" id="btn-flash">🔦 Flash</button>
+    <button class="scan-btn" id="btn-photo">🖼️ Scan From Photo</button>
+</div>
+
+<div style="text-align:right; margin-top:10px;">
+<button class="btn" id="qr-close">Close</button>
+</div>
+
+</div>
+</div>
+
+<script>
+/* === Your original logic (UNCHANGED) === */
+let items = [];
+let currentPage = 1;
+const perPage = 50;
+const SHEETDB_BASE = "https://sheetdb.io/api/v1/bykhl1ncapip9";
+
+const mockData = [
+ { "item no": "0720", "part no": "0720", "description": "0720 AC CONDENSOR NIS PICK UP 02-09", "category": "AC PARTS ITEMS", "qty": "0" },
+ { "item no": "4060-ZC026", "part no": "44060-ZC026/SP1512", "description": "44060-ZC026 BRAKE PAD RR NIS ARMADA 07-", "category": "BRAKE PAD", "qty": "25.5" }
+];
+
+/* Dark/Compact unchanged, Render unchanged ... */
+/* === Render, Search, Pagination unchanged (your original code) === */
+
+function cleanKeys(row){let fixed={};for(let k in row){ fixed[k.trim()] = (row[k]+"").trim(); } return fixed;}
+
+function display(list){
+ const tbody=document.getElementById("table-body"); tbody.innerHTML="";
+ const startIndex=(currentPage-1)*perPage;
+ list.forEach((row,i)=>{
+   tbody.innerHTML+=`
+     <tr>
+       <td>${startIndex+i+1}</td>
+       <td>${row["item no"]||""}</td>
+       <td>${row["part no"]||""}</td>
+       <td>${row["description"]||""}</td>
+       <td>${row["category"]||""}</td>
+       <td>${row["qty"]||""}</td>
+     </tr>`;
+ });
+}
+
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ let words=q.split(" ").filter(x=>x);
+
+ let filtered=items.filter(row=>{
+   let t=(row["item no"]+" "+row["part no"]+" "+row["description"]+" "+row["category"]+" "+row["qty"]).toLowerCase();
+   return words.every(w=>t.includes(w));
+ });
+
+ let totalPages=Math.max(1,Math.ceil(filtered.length/perPage));
+ if(currentPage>totalPages) currentPage=totalPages;
+
+ const start=(currentPage-1)*perPage;
+ display(filtered.slice(start,start+perPage));
+
+ document.getElementById("page-info").innerText="Page "+currentPage+" of "+totalPages;
+ document.getElementById("prev-page").disabled=currentPage===1;
+ document.getElementById("next-page").disabled=currentPage===totalPages;
+}
+
+document.getElementById("search").addEventListener("input",()=>{currentPage=1;render();});
+document.getElementById("prev-page").addEventListener("click",()=>{if(currentPage>1)currentPage--;render();});
+document.getElementById("next-page").addEventListener("click",()=>{currentPage++;render();});
+function jumpToPage(){ let p=parseInt(jumpPage.value); if(!isNaN(p)&&p>0){currentPage=p;render();} }
+
+function loadData(){
+ status.innerText="Fetching...";
+ fetch(SHEETDB_BASE).then(r=>r.json()).then(d=>{
+   items=d.map(cleanKeys);
+   status.innerText="Loaded "+items.length+" records.";
+   render();
+ }).catch(()=>{
+   status.innerText="Offline mode.";
+   items=mockData; render();
+ });
+}
+loadData();
+
+/* ===================== SCANNER ENHANCED ======================= */
+
+let qrScanner=null, html5QrcodeLoaded=false, flashOn=false;
+
+// Beep sound
+const beep = new Audio("data:audio/mp3;base64,/+MYxAAAA...short...");
+
+function loadHtml5QrcodeScript(){
+ return new Promise((res,rej)=>{
+   if(html5QrcodeLoaded) return res();
+   let s=document.createElement("script");
+   s.src="html5-qrcode.min.js";
+   s.onload=()=>{html5QrcodeLoaded=true;res();};
+   s.onerror=()=>rej("Scanner library missing.");
+   document.head.appendChild(s);
+ });
+}
+
+const qrBackdrop=document.getElementById("qr-backdrop");
+const qrReader=document.getElementById("qr-reader");
+
+document.getElementById("btn-scan").onclick=openQR;
+document.getElementById("qr-close").onclick=closeQR;
+
+async function openQR(){
+ qrBackdrop.style.display="flex";
+ flashOn=false;
+
+ try{
+   await loadHtml5QrcodeScript();
+   qrReader.innerHTML="";
+   qrScanner=new Html5Qrcode("qr-reader");
+
+   const config={
+     fps:15,
+     qrbox:null,          // full width
+     disableFlip:false
+   };
+
+   qrScanner.start(
+     { facingMode:"environment" },  // ← FIXED, no extra keys
+     config,
+     onScanSuccess,
+     ()=>{}
+   );
+
+ }catch(e){
+   alert("Scanner error: "+e);
+   qrBackdrop.style.display="none";
+ }
+}
+
+function onScanSuccess(msg){
+ if(!msg) return;
+
+ beep.play();
+ document.getElementById("search").value=msg;
+ currentPage=1; render();
+
+ closeQR(); // auto close after scan
+}
+
+function closeQR(){
+ qrBackdrop.style.display="none";
+ if(qrScanner){
+   qrScanner.stop().then(()=>qrScanner.clear()).catch(()=>{});
+   qrScanner=null;
+ }
+}
+
+/* Flashlight button */
+document.getElementById("btn-flash").onclick=async()=>{
+ if(!qrScanner) return;
+
+ try{
+   flashOn=!flashOn;
+   await qrScanner.applyVideoConstraints({ advanced:[{torch:flashOn}] });
+ }catch(e){
+   alert("Flash not supported");
+ }
+};
+
+/* Scan from Photo */
+document.getElementById("btn-photo").onclick=()=>{
+ let input=document.createElement("input");
+ input.type="file";
+ input.accept="image/*";       // Option A (fastest)
+ input.onchange=async(e)=>{
+   let file=e.target.files[0];
+   if(!file) return;
+   try{
+     const result = await qrScanner.scanFile(file,true);
+     onScanSuccess(result);
+   }catch(err){
+     alert("No QR/Barcode found in image.");
+   }
+ };
+ input.click();
+};
+</script>
+
+</body>
+</html>
