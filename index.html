@@ -373,7 +373,7 @@ closeQR(); // stop + clear happens inside
       }
     );
     // small delay to detect video element
-    setTimeout(()=>{},500);
+  
   }catch(err){
     console.error("start error", err);
     alert("Camera failed to start: " + (err && err.message ? err.message : err));
