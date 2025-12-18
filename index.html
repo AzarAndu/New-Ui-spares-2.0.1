@@ -110,7 +110,7 @@ document.getElementById("btn-add").addEventListener("click", function () {
     </label>
   </div>
 </div>
-<input id="search" type="text" placeholder="Search part / description / category / qty">
+<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">   <input id="search" type="text" placeholder="Search part / description / category / qty">   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> </div>
 <table>
   <thead>
     <tr><th>S.No</th><th>Item No</th><th>Part No</th><th>Description</th><th>Category</th><th>Qty</th></tr>
@@ -242,7 +242,13 @@ function render() {
 searchEl.oninput = () => { currentPage = 1; render(); };
 prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; render(); } };
 nextBtn.onclick = () => { currentPage++; render(); };
-
+/* ===== Google Search Button ===== */
+document.getElementById("btn-google").addEventListener("click", () => {
+  const q = searchEl.value.trim();
+  if (!q) return;
+  const url = "https://www.google.com/search?q=" + encodeURIComponent(q);
+  window.open(url, "_blank");
+});
 window.jumpToPage = () => {
   const p = +jumpPage.value;
   if (p > 0) { currentPage = p; render(); }
