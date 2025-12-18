@@ -5,44 +5,29 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Spare Parts Search</title>
 
-<!-- html5-qrcode -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
 :root{
-  --bg:#f5f6fa;--card:#fff;--text:#222;--muted:#777;--primary:#007bff;
+  --bg:#f5f6fa;--card:#fff;--text:#222;--primary:#007bff;
   --dark-bg:#1f2933;--dark-card:#2d3748;--dark-text:#e5e7eb;
 }
 body{font-family:Arial;margin:16px;background:var(--bg);color:var(--text)}
 body.dark{background:var(--dark-bg);color:var(--dark-text)}
 h2{margin:0 0 10px;font-size:26px}
-
-.topbar{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  flex-wrap:nowrap;
-  overflow-x:auto;
-  margin-bottom:10px;
-}
+.topbar{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;margin-bottom:10px}
 .btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap}
 .btn-primary{background:var(--primary);color:#fff}
 .btn-secondary{background:#e5e7eb}
-
 #search{width:100%;max-width:420px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px}
-
 table{width:100%;border-collapse:collapse;background:var(--card);border-radius:8px}
 th,td{padding:10px;border-bottom:1px solid #ddd}
 th{background:#e6e9f0}
 .compact th,.compact td{padding:6px;font-size:13px}
 body.dark table{background:var(--dark-card)}
 body.dark th{background:#111827;color:var(--dark-text)}
-
 .pagination{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-
 .highlight{background:#ffeaa7!important;font-weight:bold}
-
-/* scanner */
 .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999}
 .modal{background:#fff;padding:14px;border-radius:10px;width:95%;max-width:420px}
 #qr-reader{width:100%;height:220px}
@@ -58,7 +43,6 @@ body.dark th{background:#111827;color:var(--dark-text)}
   <button id="btnAdd" class="btn btn-primary">➕ Add</button>
   <button id="btnRefresh" class="btn btn-secondary">↻ Refresh</button>
   <button id="btnExport" class="btn btn-secondary">⬇ CSV</button>
-
   <label>Dark <input type="checkbox" id="darkToggle"></label>
   <label>Compact <input type="checkbox" id="compactToggle"></label>
 </div>
@@ -67,9 +51,7 @@ body.dark th{background:#111827;color:var(--dark-text)}
 
 <table>
 <thead>
-<tr>
-<th>#</th><th>Item No</th><th>Part No</th><th>Description</th><th>Category</th><th>Qty</th>
-</tr>
+<tr><th>#</th><th>Item No</th><th>Part No</th><th>Description</th><th>Category</th><th>Qty</th></tr>
 </thead>
 <tbody id="tbody"></tbody>
 </table>
@@ -82,7 +64,6 @@ body.dark th{background:#111827;color:var(--dark-text)}
   <button id="jumpBtn" class="btn btn-secondary">Go</button>
 </div>
 
-<!-- Scanner -->
 <div id="qrBackdrop" class="modal-backdrop">
   <div class="modal">
     <h3>Scan QR / Barcode</h3>
@@ -91,36 +72,39 @@ body.dark th{background:#111827;color:var(--dark-text)}
   </div>
 </div>
 
-<!-- loud sound -->
 <audio id="beep" preload="auto">
   <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
 </audio>
 
 <script>
-/* ================== CONFIG ================== */
-const SHEETDB_URL="https://sheetdb.io/api/v1/bvdsyfvkla1lv";
+const URL="https://sheetdb.io/api/v1/bvdsyfvkla1lv";
 const PER_PAGE=50;
 
-/* ================== STATE ================== */
 let all=[],page=1,scanner=null,highlightValue=null;
 
-/* ================== DOM ================== */
 const tbody=document.getElementById("tbody");
 const search=document.getElementById("search");
 const pageInfo=document.getElementById("pageInfo");
 const beep=document.getElementById("beep");
 
-/* ================== HELPERS ================== */
-function cleanKeys(row){
+/* 🔑 NORMALIZATION */
+function normalize(t){
+  return (t||"")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+}
+
+function cleanKeys(o){
   const r={};
-  for(const k in row) r[k.trim()]=String(row[k]||"").trim();
+  for(const k in o) r[k.trim()]=String(o[k]||"").trim();
   return r;
 }
 
-/* ================== LOAD DATA ================== */
 async function loadData(){
   try{
-    const res=await fetch(SHEETDB_URL);
+    const res=await fetch(URL);
     const json=await res.json();
     all=prepare(json);
     localStorage.setItem("spare_cache",JSON.stringify(all));
@@ -134,14 +118,20 @@ async function loadData(){
 function prepare(rows){
   return rows.map(r=>{
     r=cleanKeys(r);
-    r._s=(r["item no"]+" "+r["part no"]+" "+r["description"]+" "+r["category"]+" "+r["qty"]).toLowerCase();
+    r._s = normalize(
+      r["item no"]+" "+
+      r["part no"]+" "+
+      r["description"]+" "+
+      r["category"]+" "+
+      r["qty"]
+    );
     return r;
   });
 }
 
-/* ================== TOKEN SEARCH ================== */
+/* ✅ TRUE TOKEN SEARCH */
 function render(){
-  const tokens=search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const tokens=normalize(search.value).split(" ").filter(Boolean);
   const filtered=tokens.length
     ? all.filter(r=>tokens.every(t=>r._s.includes(t)))
     : all;
@@ -153,21 +143,23 @@ function render(){
   const view=filtered.slice(start,start+PER_PAGE);
 
   tbody.innerHTML=view.map((r,i)=>`
-    <tr class="${highlightValue&&r._s.includes(highlightValue.toLowerCase())?'highlight':''}">
+    <tr class="${highlightValue && r._s.includes(normalize(highlightValue))?'highlight':''}">
       <td>${start+i+1}</td>
       <td>${r["item no"]}</td>
       <td>${r["part no"]}</td>
       <td>${r["description"]}</td>
       <td>${r["category"]}</td>
       <td>${r["qty"]}</td>
-    </tr>`).join("");
+    </tr>
+  `).join("");
 
   pageInfo.textContent=`Page ${page} of ${pages} (${filtered.length})`;
 }
 
-/* ================== EVENTS ================== */
+/* debounce */
 let t;
 search.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{page=1;render();},200);};
+
 prev.onclick=()=>{if(page>1){page--;render();}};
 next.onclick=()=>{page++;render();};
 jumpBtn.onclick=()=>{const p=parseInt(jump.value);if(p>0){page=p;render();}};
@@ -176,7 +168,7 @@ btnRefresh.onclick=loadData;
 btnAdd.onclick=()=>window.open(
 "https://docs.google.com/forms/d/e/1FAIpQLSdYtCErU2QugovcnGLHkPOd_G0owZKzYadJdXXgaxwa9ZGegg/viewform","_blank");
 
-/* ================== SCANNER ================== */
+/* SCANNER */
 btnScan.onclick=()=>{
   qrBackdrop.style.display="flex";
   scanner=new Html5Qrcode("qr-reader");
@@ -198,7 +190,7 @@ btnScan.onclick=()=>{
 
 qrClose.onclick=()=>{scanner&&scanner.stop();qrBackdrop.style.display="none";};
 
-/* ================== EXPORT ================== */
+/* export */
 btnExport.onclick=()=>{
   let csv="Item No,Part No,Description,Category,Qty\n";
   all.forEach(r=>{
@@ -210,11 +202,9 @@ btnExport.onclick=()=>{
   a.click();
 };
 
-/* ================== MODES ================== */
 darkToggle.onchange=()=>document.body.classList.toggle("dark",darkToggle.checked);
 compactToggle.onchange=()=>document.body.classList.toggle("compact",compactToggle.checked);
 
-/* ================== INIT ================== */
 loadData();
 </script>
 
