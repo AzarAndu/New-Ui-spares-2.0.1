@@ -255,13 +255,14 @@ document.getElementById("btn-google").addEventListener("click", () => {
   window.open(url, "_blank");
 });
   /* ===== FitinPart Search Button ===== */
+/* ===== FitinPart (smart direct product jump via Google) ===== */
 document.getElementById("btn-fitinpart").addEventListener("click", () => {
   const q = searchEl.value.trim();
   if (!q) return;
 
   const url =
-    "https://www.fitinpart.sg/v2/en/search?q=" +
-    encodeURIComponent(q);
+    "https://www.google.com/search?q=" +
+    encodeURIComponent("site:fitinpart.sg/v2/en/product " + q);
 
   window.open(url, "_blank");
 });
