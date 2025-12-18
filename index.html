@@ -1,510 +1,222 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Spare Parts Data</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spare Parts Search</title>
+
+<!-- html5-qrcode -->
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
 <style>
-/* ===== Mixed UI: clean new look + restored features ===== */
 :root{
-  --bg:#f5f6fa; --card:#fff; --muted:#7d8794; --primary:#007bff; --text:#222;
-  --dark-bg:#2c3e50; --dark-card:#34495e; --dark-text:#ecf0f1;
+  --bg:#f5f6fa;--card:#fff;--text:#222;--muted:#777;--primary:#007bff;
+  --dark-bg:#1f2933;--dark-card:#2d3748;--dark-text:#e5e7eb;
 }
-body{
-  font-family: Arial, sans-serif;
-  margin:20px;
-  background:var(--bg);
-  color:var(--text);
-  transition: background .2s,color .2s;
+body{font-family:Arial;margin:16px;background:var(--bg);color:var(--text)}
+body.dark{background:var(--dark-bg);color:var(--dark-text)}
+h2{margin:0 0 10px;font-size:26px}
+
+.topbar{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:nowrap;
+  overflow-x:auto;
+  margin-bottom:10px;
 }
-body.dark{ background:var(--dark-bg); color:var(--dark-text); }
-h2{ margin:0 0 10px 0; font-size:32px; color:inherit; }
-#status{ color:var(--muted); margin-bottom:10px; font-style:italic; }
-/* Top bar & buttons */
-.topbar{ display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-.btn{ padding:8px 12px; border-radius:6px; border:none; cursor:pointer; }
-.btn-primary{ background:var(--primary); color:#fff; box-shadow:0 2px 0 rgba(0,0,0,0.05); }
-.btn-secondary{ background:#eee; color:#222; border-radius:6px; }
-/* toggles */
-.toggles{ display:flex; gap:12px; align-items:center; margin-left:6px; }
-.toggle{ position:relative; width:50px; height:26px; display:inline-block; }
-.toggle input{ opacity:0; width:0; height:0; }
-.slider{ position:absolute; inset:0; background:#ccc; border-radius:26px; transition:0.2s; }
-.slider:before{ content:""; position:absolute; left:3px; bottom:3px; width:20px; height:20px; background:#fff; border-radius:50%; transition:0.2s; }
-.toggle input:checked + .slider{ background:var(--primary); }
-.toggle input:checked + .slider:before{ transform:translateX(24px); }
-/* Search box */
-#search{ padding:12px; width:420px; max-width:100%; border-radius:8px; border:1px solid #ccc; margin:10px 0; }
-/* Table */
-table{ width:100%; border-collapse:collapse; background:var(--card); border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-th{ background:#e6e9f0; padding:10px; text-align:left; border-bottom:1px solid #dcdde1; }
-td{ padding:10px; border-bottom:1px solid #efefef; }
-.compact td,.compact th{ padding:6px; font-size:13px; }
-body.dark table{ background:var(--dark-card); }
-body.dark th{ background:var(--dark-bg); color:var(--dark-text); border-bottom-color:#555; }
-body.dark td{ border-bottom-color:#3a4a59; }
-/* Pagination */
-.pagination{ margin-top:16px; display:flex; align-items:center; gap:8px; }
-/* Scanner modal (SMALL centered modal) */
-.modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; z-index:9999; }
-.modal{ width:640px; max-width:94%; background:var(--card); border-radius:10px; padding:14px; box-shadow:0 8px 30px rgba(0,0,0,0.3); max-height:86vh; overflow:hidden; display:flex; flex-direction:column; }
-.modal-header{ font-size:18px; color:#666; margin:0 0 8px; }
-#qr-reader{ width:100%; height:360px; background:#000; display:flex; align-items:center; justify-content:center; color:#999; overflow:hidden; border-radius:8px; position:relative; }
-.scan-tools{ display:flex; justify-content:space-between; gap:10px; margin-top:10px; align-items:center; }
-.scan-btn{ padding:10px 14px; border-radius:6px; border:1px solid var(--primary); background:#fff; color:var(--primary); cursor:pointer; }
-.modal-footer{ text-align:right; margin-top:10px; }
-/* ensure close always visible and modal content scrollable if needed */
-.modal-body{ overflow:auto; flex:1; }
-/* dark variant for modal */
-body.dark .modal{ background:var(--dark-card); color:var(--dark-text); }
-/* responsive */
-@media (max-width:600px){
-  .modal{ width:94%; padding:10px; }
-  #qr-reader{ height:260px; }
-  #search{ width:100%; }
-}
+.btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-secondary{background:#e5e7eb}
+
+#search{width:100%;max-width:420px;padding:10px;border-radius:8px;border:1px solid #ccc;margin-bottom:10px}
+
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:8px}
+th,td{padding:10px;border-bottom:1px solid #ddd}
+th{background:#e6e9f0}
+.compact th,.compact td{padding:6px;font-size:13px}
+body.dark table{background:var(--dark-card)}
+body.dark th{background:#111827;color:var(--dark-text)}
+
+.pagination{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+.highlight{background:#ffeaa7!important;font-weight:bold}
+
+/* scanner */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:9999}
+.modal{background:#fff;padding:14px;border-radius:10px;width:95%;max-width:420px}
+#qr-reader{width:100%;height:220px}
 </style>
 </head>
-<body>
-<div id="status">Loading data...</div>
-<h2>Spare Parts Search</h2>
-<div id="soundHint" style="margin:8px 0; padding:10px; background:#fff3cd; border-radius:8px; font-size:14px; text-align:center; display:none;">
-  🔊 Tap below to enable scanner beep sound (required once):
-  <button id="unlockSound" class="btn btn-primary" style="margin-top:8px;">Enable Sound</button>
-</div>
-<div class="topbar">
-  <button id="btn-scan" class="btn btn-primary">📷 Scan (QR / Barcode)</button>
-  <button id="btn-refresh" class="btn btn-secondary">↻ Refresh</button>
-  <div style="flex:1"></div>
-  <div class="toggles" title="Toggles">
-    <label style="display:flex;flex-direction:column;align-items:center;font-size:12px;">
-      <div style="margin-bottom:6px;">Dark</div>
-      <label class="toggle"><input id="darkToggle" type="checkbox"><span class="slider"></span></label>
-    </label>
-    <label style="display:flex;flex-direction:column;align-items:center;font-size:12px;">
-      <div style="margin-bottom:6px;">Compact</div>
-      <label class="toggle"><input id="compactToggle" type="checkbox"><span class="slider"></span></label>
-    </label>
-  </div>
-</div>
-<input id="search" type="text" placeholder="Search part / description / category / qty">
-<table>
-  <thead>
-    <tr><th>S.No</th><th>Item No</th><th>Part No</th><th>Description</th><th>Category</th><th>Qty</th></tr>
-  </thead>
-  <tbody id="table-body"></tbody>
-</table>
-<div class="pagination">
-  <button id="prev-page" class="btn btn-secondary">Prev</button>
-  <span id="page-info"></span>
-  <button id="next-page" class="btn btn-secondary">Next</button>
-</div>
-<br>
-<input id="jumpPage" type="number" placeholder="Go to page"><button onclick="jumpToPage()" class="btn btn-secondary">Go</button>
-<!-- SMALL SCANNER MODAL -->
-<div id="qr-backdrop" class="modal-backdrop" aria-hidden="true">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Scanner modal">
-    <div class="modal-body">
-      <h3 class="modal-header">Scanner (QR + Barcode)</h3>
-      <div id="qr-reader">Camera preview will appear here</div>
-      <div class="scan-tools">
-        <div style="display:flex;gap:8px;">
-          <button id="btn-flash" class="scan-btn">🔦 Flash</button>
-          <button id="btn-photo" class="scan-btn">🖼️ Scan From Photo</button>
-        </div>
-        <div style="font-size:13px;color:#666;">Tip: center code inside the preview</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button id="qr-close" class="btn btn-secondary">Close</button>
-    </div>
-  </div>
-</div>
-<script>
-/* ===================== ORIGINAL APP / SHEETDB LOGIC (PRESERVED) ===================== */
-let items = [];
-let currentPage = 1;
-const perPage = 50;
-let isDark = localStorage.getItem('darkMode') === 'true';
-let isCompact = localStorage.getItem('compactMode') === 'true';
-const statusEl = document.getElementById('status');
-const SHEETDB_BASE = "https://sheetdb.io/api/v1/bykhl1ncapip9";
-// Mock fallback
-const mockData = [
-  { "item no":"0720","part no":"0720","description":"0720 AC CONDENSOR NIS PICK UP 02-09","category":"AC PARTS ITEMS","qty":"0" },
-  { "item no":"4060-ZC026","part no":"44060-ZC026/SP1512","description":"44060-ZC026 BRAKE PAD RR NIS ARMADA 07-","category":"BRAKE PAD","qty":"25.5" }
-];
-if(isDark) document.body.classList.add('dark');
-if(isCompact) document.body.classList.add('compact');
-document.getElementById('darkToggle').checked = isDark;
-document.getElementById('compactToggle').checked = isCompact;
-function toggleDark(){ isDark=!isDark; document.body.classList.toggle('dark',isDark); localStorage.setItem('darkMode',isDark); }
-function toggleCompact(){ isCompact=!isCompact; document.body.classList.toggle('compact',isCompact); localStorage.setItem('compactMode',isCompact); }
-document.getElementById('darkToggle').addEventListener('change', toggleDark);
-document.getElementById('compactToggle').addEventListener('change', toggleCompact);
-function cleanKeys(row){ let fixed={}; for(let k in row) fixed[k.trim()] = (row[k]+"").trim(); return fixed; }
-function display(list){
-  const tbody = document.getElementById('table-body');
-  tbody.innerHTML = "";
-  const startIndex = (currentPage-1)*perPage;
-  const headers = ['S.No','Item No','Part No','Description','Category','Qty'];
-  for(let i=0;i<list.length;i++){
-    const r=list[i];
-    tbody.innerHTML += `<tr>
-      <td data-label="${headers[0]}">${startIndex+i+1}</td>
-      <td data-label="${headers[1]}">${r["item no"]||""}</td>
-      <td data-label="${headers[2]}">${r["part no"]||""}</td>
-      <td data-label="${headers[3]}">${r["description"]||""}</td>
-      <td data-label="${headers[4]}">${r["category"]||""}</td>
-      <td data-label="${headers[5]}">${r["qty"]||""}</td>
-    </tr>`;
-  }
-}
-function render(){
-  let q = (document.getElementById('search').value||"").toLowerCase();
-  let keywords = q.split(" ").filter(k=>k.trim()!=="");
-  let filtered = items.filter(row=>{
-    let text = ((row["item no"]||"")+" "+(row["part no"]||"")+" "+(row["description"]||"")+" "+(row["category"]||"")+" "+(row["qty"]||"")).toLowerCase();
-    return keywords.every(w => text.includes(w));
-  });
-  let totalPages = Math.max(1, Math.ceil(filtered.length/perPage));
-  if(currentPage>totalPages) currentPage=totalPages;
-  let start = (currentPage-1)*perPage;
-  display(filtered.slice(start, start+perPage));
-  document.getElementById('page-info').innerText = "Page "+currentPage+" of "+totalPages;
-  document.getElementById('prev-page').disabled = currentPage===1;
-  document.getElementById('next-page').disabled = currentPage===totalPages;
-}
-document.getElementById('search').addEventListener('input', ()=>{ currentPage=1; render(); });
-document.getElementById('prev-page').addEventListener('click', ()=>{ if(currentPage>1) currentPage--; render(); });
-document.getElementById('next-page').addEventListener('click', ()=>{ currentPage++; render(); });
-function jumpToPage(){ let p=parseInt(document.getElementById('jumpPage').value); if(!isNaN(p)&&p>0){ currentPage=p; render(); } }
-function loadData(){
-  statusEl.innerText = "Fetching records...";
-  fetch(SHEETDB_BASE).then(r=>r.json()).then(data=>{
-    items = data.map(cleanKeys);
-    statusEl.innerText = "Loaded "+items.length+" records.";
-    render();
-  }).catch(err=>{
-    statusEl.innerText = "Offline mode: using sample data.";
-    items = mockData;
-    render();
-  });
-}
-loadData();
-document.getElementById('btn-refresh').addEventListener('click', loadData);
-/* ===================== SCANNER ENHANCEMENTS (QR + EAN-13 photo fallback) ===================== */
-let html5QrcodeLoaded = false;
-let qrScanner = null;
-let scanLock = false;
-let torchOn = false;
-// tiny beep (short sound)
-// ────── LOUD SUCCESS BEEP (copy-paste this instead) ──────
-const beep = new Audio("https://cdn.jsdelivr.net/gh/mdbassit/beep-sound@master/success.mp3");
-function injectScriptText(code){
-  return new Promise((resolve,reject)=>{
-    try{
-      const s=document.createElement('script');
-      s.type='text/javascript';
-      s.text = code;
-      document.head.appendChild(s);
-      html5QrcodeLoaded = true;
-      resolve();
-    }catch(e){ reject(e); }
-  });
-}
-function tryLoadLocal(){
-  return new Promise((resolve,reject)=>{
-    if(html5QrcodeLoaded) return resolve();
-    const s=document.createElement('script');
-    s.src = "./html5-qrcode.min.js";
-    s.onload = ()=>{ html5QrcodeLoaded=true; resolve(); };
-    s.onerror = ()=>{ s.remove(); reject(new Error("local load failed")); };
-    document.head.appendChild(s);
-  });
-}
-function tryFetchRawGithub(){
-  return new Promise((resolve,reject)=>{
-    try{
-      const hostname = window.location.hostname;
-      const pathParts = (window.location.pathname||"/").split("/").filter(Boolean);
-      let rawUrl = "https://raw.githubusercontent.com/mebjas/html5-qrcode/master/dist/html5-qrcode.min.js";
-      if(hostname.endsWith("github.io") && pathParts.length>0){
-        const username = hostname.split(".")[0];
-        const repo = pathParts[0];
-        rawUrl = `https://raw.githubusercontent.com/${username}/${repo}/main/html5-qrcode.min.js`;
-      }
-      fetch(rawUrl).then(r=>{
-        if(!r.ok) throw new Error("raw fetch error "+r.status);
-        return r.text();
-      }).then(txt=>{
-        if(!txt || txt.length < 200) throw new Error("raw file too small");
-        return injectScriptText(txt);
-      }).then(resolve).catch(reject);
-    }catch(e){ reject(e); }
-  });
-}
-async function loadHtml5QrcodeScript(){
-  if(html5QrcodeLoaded) return;
-  try{
-    await tryLoadLocal();
-    return;
-  }catch(e){}
-  try{
-    await tryFetchRawGithub();
-    return;
-  }catch(e){}
-  // final fallback to CDN (may be blocked)
-  return new Promise((resolve,reject)=>{
-    const s=document.createElement('script');
-    s.src = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/minified/html5-qrcode.min.js";
-    s.onload = ()=>{ html5QrcodeLoaded=true; resolve(); };
-    s.onerror = ()=>reject(new Error("All attempts to load html5-qrcode failed."));
-    document.head.appendChild(s);
-  });
-}
-const qrBackdrop = document.getElementById('qr-backdrop');
-const qrReader = document.getElementById('qr-reader');
-const btnScan = document.getElementById('btn-scan');
-const btnClose = document.getElementById('qr-close');
-const btnFlash = document.getElementById('btn-flash');
-const btnPhoto = document.getElementById('btn-photo');
-btnScan.addEventListener('click', openQR);
-btnClose.addEventListener('click', closeQR);
-function safeClearScanner(){
-  if(qrScanner){
-    try{
-      qrScanner.stop().then(()=>{ try{ qrScanner.clear(); }catch(e){} }).catch(()=>{});
-    }catch(e){}
-    qrScanner = null;
-  }
-  torchOn = false;
-}
-function getScannerVideoElement(){
-  if(!qrReader) return null;
-  // html5-qrcode places a video element inside the container
-  return qrReader.querySelector('video') || null;
-}
-async function setTorch(on){
-  try{
-    const video = getScannerVideoElement();
-    if(!video || !video.srcObject) throw new Error("No video");
-    const track = video.srcObject.getVideoTracks()[0];
-    if(!track) throw new Error("No track");
-    const cap = track.getCapabilities ? track.getCapabilities() : {};
-    if(cap.torch){
-      await track.applyConstraints({ advanced:[{ torch: on }] });
-      torchOn = on;
-      return true;
-    }else{
-      // best-effort attempt (may fail)
-      await track.applyConstraints({ advanced:[{ torch: on }] }).catch(()=>{});
-      return false;
-    }
-  }catch(e){
-    return false;
-  }
-}
-/* OPEN scanner - small modal */
-async function openQR(){
-  qrBackdrop.style.display = 'flex';
-  qrBackdrop.setAttribute('aria-hidden','false');
-  scanLock = false;
-  safeClearScanner();
-  qrReader.innerHTML = ""; // clear
-  // ensure modal visible/rendered
-  await new Promise(r => requestAnimationFrame(()=>setTimeout(r, 200)));
-  try{
-    await loadHtml5QrcodeScript();
-  }catch(e){
-    alert("Scanner library failed to load: "+(e && e.message? e.message : e));
-    qrBackdrop.style.display = 'none';
-    return;
-  }
-  try{
-    qrScanner = new Html5Qrcode("qr-reader");
-    const config = {
-      fps: 15,
-      qrbox: null, // full width of container
-      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.CODE_128
-      ]
-    };
-    const cameraConfig = { facingMode: "environment" }; // only one key
-    await qrScanner.start(
-      cameraConfig,
-      config,
-      (decodedText, decodedResult) => {
-        if(scanLock) return;
-        scanLock = true;
-        (be => be?.play?.().catch?.(() => {}))(beep); navigator.vibrate?.(180);
-        document.getElementById('search').value = decodedText;
-        currentPage = 1; render();
-        // give a short moment then close so user sees the value
-        setTimeout(()=>{ closeQR(); }, 250);
-      },
-      (error) => {
-        // ignore frame decode errors
-      }
-    );
-    // small delay to detect video element
-    setTimeout(()=>{},500);
-  }catch(err){
-    console.error("start error", err);
-    alert("Camera failed to start: " + (err && err.message ? err.message : err));
-    qrBackdrop.style.display = 'none';
-    qrBackdrop.setAttribute('aria-hidden','true');
-    safeClearScanner();
-  }
-}
-/* CLOSE scanner */
-function closeQR(){
-  qrBackdrop.style.display = 'none';
-  qrBackdrop.setAttribute('aria-hidden','true');
-  safeClearScanner();
-}
-/* Flashlight toggle */
-btnFlash.addEventListener('click', async ()=>{
-  if(!qrScanner){
-    alert("Open scanner first");
-    return;
-  }
-  const ok = await setTorch(!torchOn);
-  if(!ok) alert("Flash/torch not supported on this device/browser.");
-});
-/* ============ Scan From Photo (Option B) =============
-   Strategy:
-   1) try qrScanner.scanFile(file, tryFlip=true) => good for QR
-   2) fallback: use BarcodeDetector (EAN-13) if available
-   3) final fallback: draw to canvas + try html5-qrcode scan attempts
-*/
-btnPhoto.addEventListener('click', ()=> {
-  // create hidden file input and read file via FileReader to prevent native preview
-  const input = document.createElement('input');
-  input.type = 'file';
-  input.accept = 'image/*';
-  input.style.display = 'none';
-  input.onchange = async (e)=>{
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
-    // Read the file into memory first - prevents some browsers' default preview behaviour
-    const reader = new FileReader();
-    reader.onload = async () => {
-      // create blob from result
-      try{
-        await handleImageFile(file);
-      }catch(err){
-        alert("No QR or supported barcode found in image.");
-      }
-    };
-    reader.onerror = ()=>{ alert("Failed to read file."); };
-    reader.readAsArrayBuffer(file);
-  };
-  document.body.appendChild(input);
-  input.click();
-  // cleanup input after selection
-  input.addEventListener('blur', ()=>input.remove());
-});
-async function handleImageFile(file){
-  // ensure library loaded (for scanFile)
-  try{ await loadHtml5QrcodeScript(); }catch(e){ throw new Error("library"); }
-  // 1) try built-in scanFile (good for QR)
-  try{
-    // prefer instance method if available
-    if(qrScanner && typeof qrScanner.scanFile === 'function'){
-      const qrResult = await qrScanner.scanFile(file, true);
-      if(qrResult){
-        (be => be?.play?.().catch?.(() => {}))(beep); navigator.vibrate?.(180);
-        document.getElementById('search').value = qrResult;
-        currentPage = 1; render();
-        return;
-      }
-    } else if(typeof Html5Qrcode === 'function'){
-      // create temp instance
-      const tmp = new Html5Qrcode(); // no container - used only for scanFile
-      if(typeof tmp.scanFile === 'function'){
-        const res = await tmp.scanFile(file, true);
-        if(res){
-          (be => be?.play?.().catch?.(() => {}))(beep); navigator.vibrate?.(180);
-          document.getElementById('search').value = res;
-          currentPage = 1; render();
-          try{ tmp.clear(); }catch(e){};
-          return;
-        }
-        try{ tmp.clear(); }catch(e){};
-      }
-    }
-  }catch(e){
-    // continue to fallback
-  }
-  // 2) Try BarcodeDetector (EAN-13) on ImageBitmap (fast when supported)
-  try{
-    if('BarcodeDetector' in window){
-      const formats = ['ean_13','ean_8','upc_a']; // option B
-      let detector;
-      try{ detector = new BarcodeDetector({formats}); }catch(e){ detector = new BarcodeDetector(); }
-      const imgBitmap = await createImageBitmap(file);
-      const results = await detector.detect(imgBitmap);
-      if(results && results.length>0){
-        const val = results[0].rawValue || results[0].rawData || results[0].displayValue || results[0].rawText;
-        if(val){
-          (be => be?.play?.().catch?.(() => {}))(beep); navigator.vibrate?.(180);
-          document.getElementById('search').value = val;
-          currentPage = 1; render();
-          return;
-        }
-      }
-    }
-  }catch(e){
-    // ignore and continue
-  }
-  // 3) Last attempt: draw to canvas & use Html5Qrcode's decodeFromImage or scanFile again
-  try{
-    const img = document.createElement('img');
-    img.src = URL.createObjectURL(file);
-    await new Promise((res,rej)=>{ img.onload = res; img.onerror = rej; });
-    // attempt decode using tmp instance
-    if(typeof Html5Qrcode === 'function'){
-      const tmp = new Html5Qrcode();
-      try{
-        const res = await tmp.scanFile(file, true); // attempt again
-        if(res){
-          (be => be?.play?.().catch?.(() => {}))(beep); navigator.vibrate?.(180);
-          document.getElementById('search').value = res;
-          currentPage = 1; render();
-          try{ tmp.clear(); }catch(e){}
-          img.remove();
-          return;
-        }
-      }catch(e){}
-      try{ tmp.clear(); }catch(e){};
-    }
-    img.remove();
-  }catch(e){
-    // nothing more
-  }
-  // final: not found
-  throw new Error("not-found");
-}
-/* free camera when page unloaded */
-window.addEventListener('pagehide', ()=>{ safeClearScanner(); });
-window.addEventListener('beforeunload', ()=>{ safeClearScanner(); });
-// ────── SOUND UNLOCKER (add this) ──────
-const beepTest = new Audio(beep.src); // clone of your beep
-document.getElementById('unlockSound')?.addEventListener('click', () => {
-  beepTest.play().catch(() => {});
-  document.getElementById('soundHint').style.display = 'none';
-});
 
-// Auto-show hint if sound might be blocked
-if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
-  document.getElementById('soundHint').style.display = 'block';
+<body>
+
+<h2>Spare Parts Search</h2>
+
+<div class="topbar">
+  <button id="btnScan" class="btn btn-primary">📷 Scan</button>
+  <button id="btnAdd" class="btn btn-primary">➕ Add</button>
+  <button id="btnRefresh" class="btn btn-secondary">↻ Refresh</button>
+  <button id="btnExport" class="btn btn-secondary">⬇ CSV</button>
+
+  <label>Dark <input type="checkbox" id="darkToggle"></label>
+  <label>Compact <input type="checkbox" id="compactToggle"></label>
+</div>
+
+<input id="search" placeholder="Search like: coro pad 2093">
+
+<table>
+<thead>
+<tr>
+<th>#</th><th>Item No</th><th>Part No</th><th>Description</th><th>Category</th><th>Qty</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<div class="pagination">
+  <button id="prev" class="btn btn-secondary">Prev</button>
+  <span id="pageInfo"></span>
+  <button id="next" class="btn btn-secondary">Next</button>
+  <input id="jump" type="number" placeholder="Page" style="width:70px">
+  <button id="jumpBtn" class="btn btn-secondary">Go</button>
+</div>
+
+<!-- Scanner -->
+<div id="qrBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h3>Scan QR / Barcode</h3>
+    <div id="qr-reader"></div>
+    <button id="qrClose" class="btn btn-secondary">Close</button>
+  </div>
+</div>
+
+<!-- loud sound -->
+<audio id="beep" preload="auto">
+  <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg">
+</audio>
+
+<script>
+/* ================== CONFIG ================== */
+const SHEETDB_URL="https://sheetdb.io/api/v1/bvdsyfvkla1lv";
+const PER_PAGE=50;
+
+/* ================== STATE ================== */
+let all=[],page=1,scanner=null,highlightValue=null;
+
+/* ================== DOM ================== */
+const tbody=document.getElementById("tbody");
+const search=document.getElementById("search");
+const pageInfo=document.getElementById("pageInfo");
+const beep=document.getElementById("beep");
+
+/* ================== HELPERS ================== */
+function cleanKeys(row){
+  const r={};
+  for(const k in row) r[k.trim()]=String(row[k]||"").trim();
+  return r;
 }
+
+/* ================== LOAD DATA ================== */
+async function loadData(){
+  try{
+    const res=await fetch(SHEETDB_URL);
+    const json=await res.json();
+    all=prepare(json);
+    localStorage.setItem("spare_cache",JSON.stringify(all));
+  }catch{
+    all=JSON.parse(localStorage.getItem("spare_cache")||"[]");
+    alert("Offline mode");
+  }
+  page=1; render();
+}
+
+function prepare(rows){
+  return rows.map(r=>{
+    r=cleanKeys(r);
+    r._s=(r["item no"]+" "+r["part no"]+" "+r["description"]+" "+r["category"]+" "+r["qty"]).toLowerCase();
+    return r;
+  });
+}
+
+/* ================== TOKEN SEARCH ================== */
+function render(){
+  const tokens=search.value.toLowerCase().trim().split(/\s+/).filter(Boolean);
+  const filtered=tokens.length
+    ? all.filter(r=>tokens.every(t=>r._s.includes(t)))
+    : all;
+
+  const pages=Math.max(1,Math.ceil(filtered.length/PER_PAGE));
+  if(page>pages) page=pages;
+
+  const start=(page-1)*PER_PAGE;
+  const view=filtered.slice(start,start+PER_PAGE);
+
+  tbody.innerHTML=view.map((r,i)=>`
+    <tr class="${highlightValue&&r._s.includes(highlightValue.toLowerCase())?'highlight':''}">
+      <td>${start+i+1}</td>
+      <td>${r["item no"]}</td>
+      <td>${r["part no"]}</td>
+      <td>${r["description"]}</td>
+      <td>${r["category"]}</td>
+      <td>${r["qty"]}</td>
+    </tr>`).join("");
+
+  pageInfo.textContent=`Page ${page} of ${pages} (${filtered.length})`;
+}
+
+/* ================== EVENTS ================== */
+let t;
+search.oninput=()=>{clearTimeout(t);t=setTimeout(()=>{page=1;render();},200);};
+prev.onclick=()=>{if(page>1){page--;render();}};
+next.onclick=()=>{page++;render();};
+jumpBtn.onclick=()=>{const p=parseInt(jump.value);if(p>0){page=p;render();}};
+btnRefresh.onclick=loadData;
+
+btnAdd.onclick=()=>window.open(
+"https://docs.google.com/forms/d/e/1FAIpQLSdYtCErU2QugovcnGLHkPOd_G0owZKzYadJdXXgaxwa9ZGegg/viewform","_blank");
+
+/* ================== SCANNER ================== */
+btnScan.onclick=()=>{
+  qrBackdrop.style.display="flex";
+  scanner=new Html5Qrcode("qr-reader");
+  scanner.start(
+    {facingMode:"environment"},
+    {fps:10,qrbox:{width:180,height:180}},
+    txt=>{
+      beep.play().catch(()=>{});
+      navigator.vibrate&&navigator.vibrate([300,150,300,150,300]);
+      highlightValue=txt;
+      search.value=txt;
+      page=1;
+      render();
+      scanner.stop();
+      qrBackdrop.style.display="none";
+    }
+  );
+};
+
+qrClose.onclick=()=>{scanner&&scanner.stop();qrBackdrop.style.display="none";};
+
+/* ================== EXPORT ================== */
+btnExport.onclick=()=>{
+  let csv="Item No,Part No,Description,Category,Qty\n";
+  all.forEach(r=>{
+    csv+=`"${r["item no"]}","${r["part no"]}","${r["description"]}","${r["category"]}","${r["qty"]}"\n`;
+  });
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download="spare_parts.csv";
+  a.click();
+};
+
+/* ================== MODES ================== */
+darkToggle.onchange=()=>document.body.classList.toggle("dark",darkToggle.checked);
+compactToggle.onchange=()=>document.body.classList.toggle("compact",compactToggle.checked);
+
+/* ================== INIT ================== */
+loadData();
 </script>
+
 </body>
 </html>
