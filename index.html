@@ -77,6 +77,27 @@ body.dark table {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
+  /* ===== Cell highlight (light + dark mode safe) ===== */
+td.cell-highlight {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 230, 0, 0.85),
+    rgba(255, 180, 0, 0.85)
+  );
+  color: #000;
+  transition: background 0.25s ease;
+}
+
+/* Dark mode override */
+body.dark td.cell-highlight {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 0, 0.95),
+    rgba(255, 200, 0, 0.95)
+  );
+  color: #000;
+}
+
 </style>
 <script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
@@ -293,6 +314,10 @@ document.addEventListener("mouseup", () => {
 tbody.addEventListener("click", (e) => {
   const cell = e.target.closest("td");
   if (!cell) return;
+
+   // 🔆 VISUAL FEEDBACK
+  cell.classList.add("cell-highlight");
+  setTimeout(() => cell.classList.remove("cell-highlight"), 600);
 
   const text = cell.textContent.trim();
   if (!text || text.length < 3) return;
