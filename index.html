@@ -164,7 +164,10 @@ document.getElementById("btn-add").addEventListener("click", function () {
     </label>
   </div>
 </div>
-<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">   <input id="search" type="text" placeholder="Search part / description / category / qty">  
+<div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">  
+  <input id="search" type="text" placeholder="Search part / description / category / qty">  
+  <button id="btn-clear" class="btn btn-secondary" title="Clear search">✖ Clear</button>
+
   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> 
   <button id="btn-fitinpart" class="btn btn-secondary" title="Search in FitinPart">
   🧩 FitinPart
@@ -320,6 +323,14 @@ document.getElementById("btn-fitinpart").addEventListener("click", () => {
 
   window.open(url, "_blank");
 });
+
+  /* ===== Clear Search Button ===== */
+document.getElementById("btn-clear").addEventListener("click", () => {
+  searchEl.value = "";
+  currentPage = 1;
+  render();
+});
+
   
 window.jumpToPage = () => {
   const p = +jumpPage.value;
@@ -344,21 +355,32 @@ document.addEventListener("mouseup", () => {
 });
 
   /* ===== Mobile tap on table cell → auto search ===== */
+/* ===== Mobile tap on table cell → auto search + highlight ===== */
 tbody.addEventListener("click", (e) => {
   const cell = e.target.closest("td");
   if (!cell) return;
-
-   // 🔆 VISUAL FEEDBACK
-  cell.classList.add("cell-highlight");
-  setTimeout(() => cell.classList.remove("cell-highlight"), 600);
 
   const text = cell.textContent.trim();
   if (!text || text.length < 3) return;
 
   searchEl.value = text;
   currentPage = 1;
-  render();
+
+  render(); // rebuild table first
+
+  // highlight matching cell AFTER render
+  setTimeout(() => {
+    const cells = tbody.querySelectorAll("td");
+    for (const c of cells) {
+      if (c.textContent.trim() === text) {
+        c.classList.add("cell-highlight");
+        setTimeout(() => c.classList.remove("cell-highlight"), 900);
+        break;
+      }
+    }
+  }, 0);
 });
+
 
 
 /* ========== FAST SHEETDB LOAD ========== */
