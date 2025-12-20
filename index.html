@@ -186,7 +186,7 @@ body.dark .site-menu {
 
   
 </style>
-<script src="https://unpkg.com/tesseract.js@5/dist/tesseract.min.js"></script>
+
 </head>
 <body>
 <div id="status">Loading data...</div>
@@ -838,9 +838,6 @@ try {
   // ignore and continue
 }
 
-// 3) OCR fallback (printed text like Google Lens)
-const ocrFound = await scanPrintedTextFromImage(file);
-if (ocrFound) return;
 
   // 3) Last attempt: draw to canvas & use Html5Qrcode's decodeFromImage or scanFile again
   try{
@@ -877,60 +874,7 @@ throw new Error("not-found");
 window.addEventListener('pagehide', ()=>{ safeClearScanner(); });
 window.addEventListener('beforeunload', ()=>{ safeClearScanner(); });
 
-          async function scanPrintedTextFromImage(file) {
-  // --- Preprocess image ---
-  const img = document.createElement("img");
-  img.src = URL.createObjectURL(file);
-  await new Promise(res => (img.onload = res));
 
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  // Resize for OCR sweet spot
-  const scale = 2;
-  canvas.width = img.width * scale;
-  canvas.height = img.height * scale;
-
-  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-  // Convert to grayscale + contrast
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  const d = imgData.data;
-
-  for (let i = 0; i < d.length; i += 4) {
-    const gray = d[i] * 0.3 + d[i + 1] * 0.59 + d[i + 2] * 0.11;
-    const contrast = gray > 140 ? 255 : 0;
-    d[i] = d[i + 1] = d[i + 2] = contrast;
-  }
-
-  ctx.putImageData(imgData, 0, 0);
-
-  // --- OCR ---
-  const { data } = await Tesseract.recognize(canvas, "eng", {
-    tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-",
-    classify_bln_numeric_mode: 1
-  });
-
-  const text = data.text.toUpperCase().replace(/\s+/g, " ");
-
-  // --- Part number aware detection ---
-  const match = text.match(
-    /\b[A-Z]{1,5}[0-9]{2,6}[-][A-Z0-9]{2,6}\b|\b[0-9]{4,6}-[0-9A-Z]{3,6}\b/
-  );
-
-  if (match) {
-    beep.play().catch(() => {});
-    navigator.vibrate?.(180);
-
-    searchEl.value = match[0];
-    currentPage = 1;
-    render();
-
-    return true;
-  }
-
-  return false;
-}
 
 </script>
 </body>
