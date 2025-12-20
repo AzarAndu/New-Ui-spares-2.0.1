@@ -223,10 +223,12 @@ document.getElementById("btn-add").addEventListener("click", function () {
   <button id="btn-clear" class="btn btn-secondary" title="Clear search">✖ Clear</button>
 
   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> 
-  <button id="btn-fitinpart" class="btn btn-secondary" title="Search in FitinPart">
-  🧩 FitinPart
-  </button>
-</div>
+  <button id="btn-lens" class="btn btn-secondary" title="Scan using Google Lens">
+  📷 Google Lens
+</button>
+
+  
+ </div>
               <div class="site-dropdown">
   <button id="btn-sites" class="btn btn-primary">
     🔍 Search Sites ▾
@@ -378,38 +380,26 @@ document.getElementById("btn-google").addEventListener("click", () => {
   const url = "https://www.google.com/search?q=" + encodeURIComponent(q);
   window.open(url, "_blank");
 });
-  /* ===== FitinPart Search Button ===== */
-/* ===== Smart Spare Parts Search (Fast, No Prompt) ===== */
-document.getElementById("btn-fitinpart").addEventListener("click", () => {
-  const q = searchEl.value.trim();
-  if (!q) return;
+  /* ===== googlelensjs Search Button ===== */
+        document.getElementById("btn-lens").addEventListener("click", () => {
+  // Android: open Google Lens directly
+  const lensIntent =
+    "intent://scan/#Intent;scheme=zxing;package=com.google.android.googlequicksearchbox;end";
 
-  // Priority 1: Partsouq (most reliable)
-  const partsouq =
-    "https://partsouq.com/en/search/all?q=" + encodeURIComponent(q);
-
-  // Priority 2: Spareto (confirmed keyword search)
-  const spareto =
-    "https://spareto.com/products?keywords=" + encodeURIComponent(q);
-
-  // Priority 3: Sumarauto (best guess)
-  const sumarauto =
-    "https://www.sumarauto.com/Products/" + encodeURIComponent(q);
-
-  // Fallback: Google site search
-  const googleFallback =
-    "https://www.google.com/search?q=" +
-    encodeURIComponent(
-      "site:partsouq.com " + q +
-      " OR site:spareto.com " + q +
-      " OR site:sumarauto.com " + q
-    );
-
-  // 🔥 Default open: Partsouq
-  window.open(partsouq, "_blank");
-
-  // ⌨️ Power-user tip (console optional)
-  console.info("Alt searches:", spareto, sumarauto, googleFallback);
+  window.location.href = lensIntent;
+});
+         searchEl.addEventListener("focus", async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    if (text && text.length >= 4) {
+      const cleaned = text.trim().toUpperCase();
+      searchEl.value = cleaned;
+      currentPage = 1;
+      render();
+    }
+  } catch (e) {
+    // clipboard permission denied – ignore
+  }
 });
 
 
