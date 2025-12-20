@@ -381,13 +381,19 @@ document.getElementById("btn-google").addEventListener("click", () => {
   window.open(url, "_blank");
 });
   /* ===== googlelensjs Search Button ===== */
-        document.getElementById("btn-lens").addEventListener("click", () => {
-  // Android: open Google Lens directly
-  const lensIntent =
-    "intent://scan/#Intent;scheme=zxing;package=com.google.android.googlequicksearchbox;end";
+         /* ===== Google Lens Button (Option A – Correct) ===== */
+document.getElementById("btn-lens").addEventListener("click", () => {
+  // Open Google app (Lens is inside it)
+  const intent =
+    "intent://search/#Intent;" +
+    "scheme=googleapp;" +
+    "package=com.google.android.googlequicksearchbox;" +
+    "end";
 
-  window.location.href = lensIntent;
+  window.location.href = intent;
 });
+
+
          searchEl.addEventListener("focus", async () => {
   try {
     const text = await navigator.clipboard.readText();
