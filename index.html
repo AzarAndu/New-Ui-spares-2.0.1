@@ -893,13 +893,18 @@ async function readFromSheet() {
     const res = await fetch(SYNC_URL);
     const text = (await res.text()).trim();
 
-    if (text && text !== searchEl.value) {
-      searchEl.value = text;
-      currentPage = 1;
-      render();
-    }
+    if (!text) return;
+
+    // fill search & render
+    searchEl.value = text;
+    currentPage = 1;
+    render();
+
+    // 🔥 CLEAR SHEET after successful read
+    await fetch(SYNC_URL + "?clear=1");
+
   } catch (e) {
-    // silent fail
+    // silent
   }
 }
 
