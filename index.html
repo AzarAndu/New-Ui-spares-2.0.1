@@ -904,7 +904,11 @@ async function readFromSheet() {
 }
 
 // poll every 3 seconds
-setInterval(readFromSheet, 3000);
+// run auto-sync ONLY on laptop / desktop
+if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  setInterval(readFromSheet, 3000);
+}
+
 
 
 
