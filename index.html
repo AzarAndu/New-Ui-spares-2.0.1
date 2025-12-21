@@ -223,9 +223,8 @@ document.getElementById("btn-add").addEventListener("click", function () {
   <button id="btn-clear" class="btn btn-secondary" title="Clear search">✖ Clear</button>
 
   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> 
-  <button id="btn-lens" class="btn btn-secondary" title="Scan using Google Lens">
-  📷 Google Lens
-</button>
+  <button id="btn-lens" class="btn btn-secondary" title="Scan using Google Lens"> 📷 Google Lens </button>
+  <button id="btn-send" class="btn btn-secondary" title="Send to Laptop">📤 Send to Laptop</button>
 
   
  </div>
@@ -275,6 +274,10 @@ document.getElementById("btn-add").addEventListener("click", function () {
   </div>
 </div>
 <script>
+  /* =====================SEARCH VALUE SYNC SHEET LOGIC ===================== */
+                 const SYNC_URL = "https://script.google.com/macros/s/AKfycbwIQc9Qo7JB_dEtsWx1jWX2IKnKxTJMcj4YuYg2wnqP29IEOGZxsAajEdXtvLGKQGPA5g/exec";
+
+
 /* ===================== ORIGINAL APP / SHEETDB LOGIC (PRESERVED) ===================== */
 /* ===================== OPTIMIZED APP + SHEETDB (REPLACEMENT) ===================== */
 let items = [];
@@ -416,6 +419,19 @@ document.getElementById("btn-clear").addEventListener("click", () => {
   currentPage = 1;
   render();
 });
+         /* ===== Send to Laptop Button ===== */
+         document.getElementById("btn-send").addEventListener("click", () => {
+  const val = searchEl.value.trim();
+  if (!val) return;
+
+  fetch(SYNC_URL + "?write=" + encodeURIComponent(val))
+    .then(() => {
+      navigator.vibrate?.(100);
+      alert("Sent to laptop ✔");
+    })
+    .catch(() => alert("Send failed"));
+});
+
 
                             /* ===== Site Dropdown Logic ===== */
 const btnSites = document.getElementById("btn-sites");
@@ -870,6 +886,25 @@ throw new Error("not-found");
 /* free camera when page unloaded */
 window.addEventListener('pagehide', ()=>{ safeClearScanner(); });
 window.addEventListener('beforeunload', ()=>{ safeClearScanner(); });
+
+      /* ===== AUTO READ FROM SHEET (Laptop side) ===== */
+async function readFromSheet() {
+  try {
+    const res = await fetch(SYNC_URL);
+    const text = (await res.text()).trim();
+
+    if (text && text !== searchEl.value) {
+      searchEl.value = text;
+      currentPage = 1;
+      render();
+    }
+  } catch (e) {
+    // silent fail
+  }
+}
+
+// poll every 3 seconds
+setInterval(readFromSheet, 3000);
 
 
 
