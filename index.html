@@ -225,6 +225,7 @@ document.getElementById("btn-add").addEventListener("click", function () {
   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> 
   <button id="btn-lens" class="btn btn-secondary" title="Scan using Google Lens"> 📷 Google Lens </button>
   <button id="btn-send" class="btn btn-secondary" title="Send to Laptop">📤 Send to Laptop</button>
+   <button id="btn-read-toggle" class="btn btn-secondary">▶ Resume Laptop Read </button>
 
   
  </div>
@@ -277,6 +278,8 @@ document.getElementById("btn-add").addEventListener("click", function () {
   /* =====================SEARCH VALUE SYNC SHEET LOGIC ===================== */
                 const SYNC_URL = "https://script.google.com/macros/s/AKfycbzbsZCaBCFJwOy-Vd81irTNdswQgDik8v_g-aOlblq9Pog6uTerWvp7LUw5eMJcvxjp/exec";
 
+                    let autoReadEnabled = true;
+                    let lastRowId = null;
 
 
 /* ===================== ORIGINAL APP / SHEETDB LOGIC (PRESERVED) ===================== */
@@ -433,6 +436,11 @@ document.getElementById("btn-send").addEventListener("click", () => {
     })
     .catch(() => alert("Send failed"));
 });
+                     /* =====btn-read-toggle Logic ===== */
+              document.getElementById("btn-read-toggle").addEventListener("click", () => {
+  autoReadEnabled = true;
+});
+
 
                             /* ===== Site Dropdown Logic ===== */
 const btnSites = document.getElementById("btn-sites");
@@ -888,39 +896,47 @@ throw new Error("not-found");
 window.addEventListener('pagehide', ()=>{ safeClearScanner(); });
 window.addEventListener('beforeunload', ()=>{ safeClearScanner(); });
 
-      /* ===== AUTO READ FROM SHEET (Laptop side) ===== */
-/* ===== Auto Sync From Sheet (Laptop side) ===== */
-async function readFromSheet() {
+    /* ===== AUTO READ FROM SHEET (Laptop side | Latest Row Only) ===== */
+
+let autoReadEnabled = true;
+let lastRowId = null;
+
+async function readLatestFromSheet() {
+  if (!autoReadEnabled) return;
+
   try {
-    const res = await fetch(SYNC_URL + "?_=" + Date.now(), {
-  cache: "no-store"
-});
+    const res = await fetch(
+      SYNC_URL + "?read=latest&_=" + Date.now(),
+      { cache: "no-store" }
+    );
 
-    const text = (await res.text()).trim();
+    const data = await res.json();
+    if (!data || !data.value || !data.row) return;
 
-    // if sheet is empty or no change → do nothing
-    if (!text) return;
+    // already consumed → ignore
+    if (data.row === lastRowId) return;
 
-    // if new value received
-    if (text !== searchEl.value) {
-      searchEl.value = text;
-      currentPage = 1;
-      render();
-    }
+    lastRowId = data.row;
 
-    // clear sheet so this value is consumed only once
-   await fetch(SYNC_URL + "?clear=1&_=" + Date.now(), {
-  cache: "no-store"
-});
+    searchEl.value = data.value;
+    currentPage = 1;
+    render();
+
+    // ⏸ pause until user resumes
+    autoReadEnabled = false;
 
   } catch (e) {
-    // silent fail — we don’t want errors to break the app
+    console.warn("Sheet read failed", e);
   }
 }
 
 // Poll every 3 seconds only on laptop/desktop
 if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-  setInterval(readFromSheet, 3000);
+  setInterval(() => {
+    if (autoReadEnabled) {
+      readLatestFromSheet();
+    }
+  }, 3000);
 }
 
 
