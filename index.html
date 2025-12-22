@@ -630,7 +630,11 @@ let scanLock = false;
 let torchOn = false;
 // tiny beep (short sound)
 // ────── LOUD SUCCESS BEEP (copy-paste this instead) ──────
-const beep = new Audio("https://cdn.jsdelivr.net/gh/mdbassit/beep-sound@master/success.mp3");
+  
+  const beep = new Audio("./ding.mp3");
+beep.preload = "auto";
+
+  
 function injectScriptText(code){
   return new Promise((resolve,reject)=>{
     try{
