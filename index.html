@@ -207,15 +207,30 @@ document.getElementById("btn-add").addEventListener("click", function () {
 
   <button id="btn-refresh" class="btn btn-secondary">↻ Refresh</button>
   <div style="flex:1"></div>
+  
   <div class="toggles" title="Toggles">
     <label style="display:flex;flex-direction:column;align-items:center;font-size:12px;">
       <div style="margin-bottom:6px;">Dark</div>
-      <label class="toggle"><input id="darkToggle" type="checkbox"><span class="slider"></span></label>
+      <label class="toggle"><input id="darkToggle" type="checkbox"><span class="slider"></span>
+      </label>
     </label>
+    
     <label style="display:flex;flex-direction:column;align-items:center;font-size:12px;">
       <div style="margin-bottom:6px;">Compact</div>
-      <label class="toggle"><input id="compactToggle" type="checkbox"><span class="slider"></span></label>
+      <label class="toggle"><input id="compactToggle" type="checkbox"><span class="slider"></span>
+      </label>
     </label>
+
+      <!-- Laptop Read ✅ PASTE HERE -->
+<label style="display:flex;flex-direction:column;align-items:center;font-size:12px;">
+  <div id="readToggleLabel" style="margin-bottom:6px;">Laptop Read</div>
+  <label class="toggle">
+    <input id="readToggle" type="checkbox">
+    <span class="slider"></span>
+  </label>
+</label>
+
+    
   </div>
 </div>
 <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">  
@@ -225,7 +240,7 @@ document.getElementById("btn-add").addEventListener("click", function () {
   <button id="btn-google" class="btn btn-secondary" title="Search in Google">     🔍 Google   </button> 
   <button id="btn-lens" class="btn btn-secondary" title="Scan using Google Lens"> 📷 Google Lens </button>
   <button id="btn-send" class="btn btn-secondary" title="Send to Laptop">📤 Send to Laptop</button>
-   <button id="btn-read-toggle" class="btn btn-secondary">▶ Resume Laptop Read </button>
+  
 
   
  </div>
@@ -437,15 +452,23 @@ document.getElementById("btn-send").addEventListener("click", () => {
 });
                      /* =====btn-read-toggle Logic ===== */
            /* ===== btn-read-toggle Logic (Resume / Pause) ===== */
-const btnReadToggle = document.getElementById("btn-read-toggle");
+const readToggle = document.getElementById("readToggle");
+const readToggleLabel = document.getElementById("readToggleLabel");
 
-btnReadToggle.addEventListener("click", () => {
-  autoReadEnabled = !autoReadEnabled;
+// initial state sync
+readToggle.checked = autoReadEnabled;
+readToggleLabel.textContent = autoReadEnabled
+  ? "⏸ Laptop Read ON"
+  : "▶ Laptop Read OFF";
 
-  btnReadToggle.textContent = autoReadEnabled
-    ? "⏸ Pause Laptop Read"
-    : "▶ Resume Laptop Read";
-});
+readToggle.onchange = () => {
+  autoReadEnabled = readToggle.checked;
+
+  readToggleLabel.textContent = autoReadEnabled
+    ? "⏸ Laptop Read ON"
+    : "▶ Laptop Read OFF";
+};
+
 
 
 
